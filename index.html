@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vuvvive-vu</title>
+    <meta property="og:title" content="vuvvive-vu">
+    <meta property="og:description" content="dev">
+    <meta property="og:image" content="https://i.ibb.co/LDsgLPzN/image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: rgba(212,114,154,0.3); }
+
+        body { font-family: 'DM Mono', monospace; background: #000; color: #d8d8d8; min-height: 100vh; overflow-x: hidden; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes breathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes barAnim { 0% { transform: scaleY(0.4); } 100% { transform: scaleY(1); } }
+        @keyframes orbA { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } }
+        @keyframes orbB { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(-40px, 30px) scale(0.95); } 66% { transform: translate(20px, -40px) scale(1.05); } }
+
+        .animate-in { animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .animate-in:nth-child(1) { animation-delay: 0s; }
+        .animate-in:nth-child(2) { animation-delay: 0.12s; }
+        .animate-in:nth-child(3) { animation-delay: 0.24s; }
+        .animate-in:nth-child(4) { animation-delay: 0.36s; }
+        .animate-in:nth-child(5) { animation-delay: 0.48s; }
+        .animate-in:nth-child(6) { animation-delay: 0.6s; }
+        .animate-in:nth-child(7) { animation-delay: 0.72s; }
+        .animate-in:nth-child(8) { animation-delay: 0.84s; }
+
+        #bg-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.12; }
+        .orb-1 { width: 500px; height: 500px; top: -100px; right: -100px; background: radial-gradient(circle, #d4729a, transparent); animation: orbA 12s ease-in-out infinite; }
+        .orb-2 { width: 400px; height: 400px; bottom: -80px; left: -80px; background: radial-gradient(circle, #6b5b95, transparent); animation: orbB 10s ease-in-out infinite; }
+
+        #particles-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+        .scanline { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.003) 2px, rgba(255,255,255,0.003) 4px); }
+
+        .container { position: relative; min-height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 20; padding: 20px; }
+
+        .main-content { max-width: 500px; width: 100%; padding: 40px 32px 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; position: relative; background: rgba(10,10,10,0.55); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 0 80px rgba(212,114,154,0.02); animation: breathe 7s ease-in-out infinite; transform-style: preserve-3d; will-change: transform; }
+        .main-content::before { content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); }
+        .main-content::after { content: ''; position: absolute; inset: -1px; border: 1px solid rgba(212,114,154,0.03); pointer-events: none; animation: pulse 6s ease-in-out infinite; }
+
+        .corner-decoration { position: absolute; width: 20px; height: 20px; border-color: rgba(212,114,154,0.12); }
+        .corner-decoration.tl { top: 12px; left: 12px; border-top: 1px solid; border-left: 1px solid; }
+        .corner-decoration.tr { top: 12px; right: 12px; border-top: 1px solid; border-right: 1px solid; }
+        .corner-decoration.bl { bottom: 12px; left: 12px; border-bottom: 1px solid; border-left: 1px solid; }
+        .corner-decoration.br { bottom: 12px; right: 12px; border-bottom: 1px solid; border-right: 1px solid; }
+
+        .vinyl-section { display: flex; align-items: center; gap: 16px; width: 100%; padding: 0 4px; }
+        .vinyl { width: 80px; height: 80px; border-radius: 50%; position: relative; cursor: pointer; flex-shrink: 0; }
+        .vinyl-disc { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #222, #000 50%, #0a0a0a); border: 1px solid rgba(255,255,255,0.04); transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .vinyl-disc::before { content: ''; position: absolute; inset: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.02); }
+        .vinyl-disc::after { content: ''; position: absolute; inset: 20px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.02); }
+        .vinyl:active .vinyl-disc { transform: rotate(720deg); }
+        .vinyl-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 24px; height: 24px; border-radius: 50%; background: rgba(212,114,154,0.15); border: 1px solid rgba(212,114,154,0.1); display: flex; align-items: center; justify-content: center; font-size: 9px; color: rgba(212,114,154,0.5); }
+        .vinyl-info { flex: 1; text-align: left; }
+        .vinyl-label-text { font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 2px; text-transform: uppercase; }
+        .vinyl-title { font-size: 15px; color: #f0f0f0; margin: 2px 0; font-weight: 500; letter-spacing: 1px; }
+        .bars { display: inline-flex; align-items: center; gap: 2px; height: 14px; margin-left: 6px; vertical-align: middle; }
+        .bars span { width: 2px; background: rgba(212,114,154,0.4); border-radius: 1px; display: inline-block; height: 3px; }
+        .bars span:nth-child(1) { height: 5px; animation: barAnim 1s ease infinite alternate; }
+        .bars span:nth-child(2) { height: 9px; animation: barAnim 1s ease 0.15s infinite alternate; }
+        .bars span:nth-child(3) { height: 13px; animation: barAnim 1s ease 0.3s infinite alternate; }
+        .bars span:nth-child(4) { height: 7px; animation: barAnim 1s ease 0.45s infinite alternate; }
+        .bars span:nth-child(5) { height: 11px; animation: barAnim 1s ease 0.2s infinite alternate; }
+
+        .name-wrap { width: 100%; padding: 2px 0; }
+        .name-line { display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .name-line .line { flex: 1; max-width: 50px; height: 1px; background: rgba(212,114,154,0.08); }
+        .name-main { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: #f0f0f0; letter-spacing: 3px; text-transform: uppercase; }
+        .name-main .amp { font-weight: 400; font-size: 20px; margin: 0 5px; color: rgba(212,114,154,0.35); }
+
+        .bio { width: 100%; padding: 10px 14px; font-size: 11px; color: rgba(255,255,255,0.55); line-height: 1.8; border: 1px solid rgba(212,114,154,0.04); background: rgba(0,0,0,0.25); }
+        .cursor-blink::after { content: '|'; display: inline-block; color: rgba(212,114,154,0.2); animation: blink 1s step-end infinite; margin-left: 2px; font-weight: 400; }
+
+        .work-row { width: 100%; display: flex; gap: 6px; }
+        .work-item { flex: 1; border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.2); padding: 8px 12px; text-align: left; transition: border-color 0.4s, background 0.4s; }
+        .work-item:hover { border-color: rgba(212,114,154,0.12); background: rgba(212,114,154,0.03); }
+        .work-label { display: block; font-size: 8px; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 2px; }
+        .work-value { display: block; font-size: 11px; color: #f0f0f0; margin-top: 2px; }
+        .work-value a { color: #d8d8d8; text-decoration: none; transition: color 0.3s; }
+        .work-value a:hover { color: rgba(212,114,154,0.6); }
+
+        .info-grid { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .info-item { border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.2); transition: all 0.4s; }
+        .info-item:hover { border-color: rgba(212,114,154,0.12); background: rgba(212,114,154,0.03); }
+        .info-item.icon { display: flex; align-items: center; gap: 10px; padding: 12px; }
+        .info-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+        .icon-tg { color: rgba(255,255,255,0.6); }
+        .icon-gh { color: rgba(255,255,255,0.6); }
+        .icon-s { color: rgba(212,114,154,0.35); }
+        .icon-id { color: rgba(255,255,255,0.3); }
+        .info-body { flex: 1; text-align: left; }
+        .info-label { font-size: 8px; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 2px; }
+        .info-value { font-size: 13px; color: #f0f0f0; margin-top: 1px; font-weight: 500; }
+        .info-value.small { font-size: 11px; opacity: 0.55; }
+        .glow-link { color: #d8d8d8; text-decoration: none; position: relative; transition: color 0.3s; }
+        .glow-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 1px; background: rgba(212,114,154,0.25); transition: width 0.3s; }
+        .glow-link:hover { color: rgba(212,114,154,0.6); }
+        .glow-link:hover::after { width: 100%; }
+
+        .buttons-section { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+        .social-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 11px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); color: #d8d8d8; text-decoration: none; font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 3px; transition: all 0.4s; position: relative; overflow: hidden; }
+        .social-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(212,114,154,0.03), transparent); transition: left 0.6s; }
+        .social-btn:hover { background: rgba(212,114,154,0.04); border-color: rgba(212,114,154,0.12); color: #f0f0f0; }
+        .social-btn:hover::before { left: 100%; }
+        .social-btn i { font-size: 13px; color: rgba(255,255,255,0.3); transition: color 0.4s; }
+        .social-btn:hover i { color: rgba(212,114,154,0.4); }
+
+        .footer { width: 100%; text-align: center; font-size: 8px; color: rgba(255,255,255,0.08); letter-spacing: 4px; text-transform: uppercase; }
+
+        .views-widget { position: fixed; bottom: 20px; right: 20px; z-index: 50; cursor: pointer; color: rgba(212,114,154,0.04); font-size: 14px; transition: color 0.4s; }
+        .views-widget:hover { color: rgba(212,114,154,0.15); }
+        .views-popup { position: absolute; bottom: 130%; right: 0; background: rgba(5,5,5,0.95); border: 1px solid rgba(212,114,154,0.04); padding: 5px 12px; font-size: 10px; color: rgba(212,114,154,0.3); white-space: nowrap; opacity: 0; transform: translateY(8px); pointer-events: none; transition: all 0.3s; }
+        .views-widget:hover .views-popup { opacity: 1; transform: translateY(0); }
+        .views-popup::after { content: ''; position: absolute; bottom: -5px; right: 8px; width: 10px; height: 10px; background: rgba(5,5,5,0.95); border-right: 1px solid rgba(212,114,154,0.04); border-bottom: 1px solid rgba(212,114,154,0.04); transform: rotate(45deg); }
+
+        #game-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.97); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; }
+        .game-cat { font-size: 36px; position: absolute; cursor: pointer; user-select: none; }
+
+        @media (max-width: 480px) { .main-content { padding: 28px 16px 24px; } }
+        @media (max-width: 440px) { .info-grid { grid-template-columns: 1fr; } .name-main { font-size: 22px; letter-spacing: 2px; } .work-row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div id="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+    <div class="scanline"></div>
+    <canvas id="particles-canvas"></canvas>
+
+    <div id="game-overlay">
+        <h2 style="color:rgba(212,114,154,0.2);margin-bottom:10px;font-family:'Syne',sans-serif;font-size:18px;letter-spacing:3px;">catch the cat</h2>
+        <p style="color:rgba(255,255,255,0.12);font-size:11px;">score: <span id="game-score" style="color:#f0f0f0;">0</span>/10</p>
+        <div id="game-area" style="width:100%;height:70%;position:relative;"></div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="corner-decoration tl"></div>
+            <div class="corner-decoration tr"></div>
+            <div class="corner-decoration bl"></div>
+            <div class="corner-decoration br"></div>
+
+            <div class="vinyl-section animate-in">
+                <div class="vinyl" id="avatarTrigger">
+                    <div class="vinyl-disc"></div>
+                    <div class="vinyl-label">♪</div>
+                </div>
+                <div class="vinyl-info">
+                    <div class="vinyl-label-text">now playing</div>
+                    <div class="vinyl-title">hate yourself <span class="bars"><span></span><span></span><span></span><span></span><span></span></span></div>
+                </div>
+            </div>
+
+            <div class="name-wrap animate-in">
+                <div class="name-line">
+                    <span class="line"></span>
+                    <span class="name-main">vuvvive<span class="amp">&amp;</span>vu</span>
+                    <span class="line"></span>
+                </div>
+            </div>
+
+            <div class="bio animate-in cursor-blink">Hello. My name is Vuvvive, I'm an 18 year old developer from Russia. My projects: check in telegram.</div>
+
+            <div class="work-row animate-in">
+                <div class="work-item">
+                    <span class="work-label">working on</span>
+                    <span class="work-value"><a href="https://t.me/LovingMachineB" target="_blank">@LovingMachineB</a></span>
+                </div>
+                <div class="work-item">
+                    <span class="work-label">timezone</span>
+                    <span class="work-value" id="timeDisplay">moscow / utc+3</span>
+                </div>
+            </div>
+
+            <div class="info-grid animate-in">
+                <div class="info-item icon">
+                    <div class="info-icon icon-tg"><i class="fab fa-telegram-plane"></i></div>
+                    <div class="info-body">
+                        <div class="info-label">telegram</div>
+                        <div class="info-value"><a href="https://t.me/vuvvive" target="_blank" class="glow-link">@vuvvive</a></div>
+                    </div>
+                </div>
+                <div class="info-item icon">
+                    <div class="info-icon icon-id">✦</div>
+                    <div class="info-body">
+                        <div class="info-label">id</div>
+                        <div class="info-value small">980913544</div>
+                    </div>
+                </div>
+                <div class="info-item icon">
+                    <div class="info-icon icon-gh"><i class="fab fa-github"></i></div>
+                    <div class="info-body">
+                        <div class="info-label">github</div>
+                        <div class="info-value"><a href="https://github.com/vuvvive-vu" target="_blank" class="glow-link">vuvvive-vu</a></div>
+                    </div>
+                </div>
+                <div class="info-item icon">
+                    <div class="info-icon icon-s">⎇</div>
+                    <div class="info-body">
+                        <div class="info-label">stack</div>
+                        <div class="info-value small">Python, Node.js</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons-section animate-in">
+                <a href="https://t.me/vuvvive" target="_blank" class="social-btn"><i class="fab fa-telegram-plane"></i> connect telegram</a>
+                <a href="https://github.com/vuvvive-vu" target="_blank" class="social-btn"><i class="fab fa-github"></i> view github</a>
+                <a href="https://discord.gg/52t9kUpz" target="_blank" class="social-btn"><i class="fab fa-discord"></i> join discord</a>
+            </div>
+
+            <div class="footer animate-in">✦ vuvvive-vu ✦</div>
+        </div>
+    </div>
+
+    <div class="views-widget" id="viewsWidget">
+        <div class="views-popup">✦ views: <span id="viewCount">...</span></div>
+        <i class="fa-solid fa-eye"></i>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("particles-canvas"), ctx = canvas.getContext("2d");
+        let w, h, particles = [], COUNT = 60, mx = 0, my = 0, tx = 0, ty = 0, rt;
+
+        function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; COUNT = w > 600 ? 60 : 30; if(particles.length !== COUNT) init(); }
+        window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(resize, 200); });
+
+        class Dot {
+            constructor() { this.reset(); }
+            reset() { this.x = Math.random() * w; this.y = Math.random() * h; this.r = Math.random() * 1.5 + 0.5; this._baseSy = Math.random() * 0.2 + 0.1; this._baseSx = Math.random() * 0.15 - 0.075; this.sy = this._baseSy; this.sx = this._baseSx; this.a = Math.random() * 0.25 + 0.05; }
+            update() { this.y += this.sy; this.x += this.sx; if(this.y > h) { this.y = -5; this.x = Math.random() * w; } }
+        }
+
+        function init() { particles = Array.from({length: COUNT}, () => new Dot()); }
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
+            const dSq = 120 * 120;
+            for(let i = 0; i < particles.length; i++) {
+                const p = particles[i]; p.update();
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = `rgba(212,114,154,${p.a})`; ctx.fill();
+                for(let j = i + 1; j < particles.length; j++) {
+                    const q = particles[j], dx = p.x - q.x, dy = p.y - q.y, ds = dx*dx + dy*dy;
+                    if(ds < dSq) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.strokeStyle = `rgba(212,114,154,${(1 - Math.sqrt(ds) / 120) * 0.03})`; ctx.lineWidth = 0.5; ctx.stroke(); }
+                }
+            }
+        }
+        function loop() { draw(); requestAnimationFrame(loop); }
+        resize(); init(); loop();
+
+        document.addEventListener("mousemove", e => { tx = (e.clientX / w - 0.5) * 2; ty = (e.clientY / h - 0.5) * 2; });
+        (function smoothMouse() { mx += (tx - mx) * 0.05; my += (ty - my) * 0.05; particles.forEach(p => { p.sx = p._baseSx + mx * 0.02; p.sy = p._baseSy + my * 0.02; }); requestAnimationFrame(smoothMouse); })();
+
+        const card = document.querySelector(".main-content"), glow = document.createElement("div");
+        glow.style.cssText = "position:absolute;inset:-2px;pointer-events:none;opacity:0;transition:opacity 0.5s;border:1px solid rgba(212,114,154,0.04);border-radius:inherit;";
+        card.prepend(glow);
+        let tiltRAF;
+        card.addEventListener("mousemove", e => {
+            cancelAnimationFrame(tiltRAF);
+            tiltRAF = requestAnimationFrame(() => {
+                const r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+                card.style.transform = `perspective(600px) rotateY(${x*3}deg) rotateX(${-y*3}deg) translateY(0)`;
+                glow.style.opacity = "1"; glow.style.borderColor = `rgba(212,114,154,${0.03 + Math.abs(x)*0.05 + Math.abs(y)*0.05})`;
+            });
+        });
+        card.addEventListener("mouseleave", () => { card.style.transform = ""; glow.style.opacity = "0"; });
+
+        function updateTime() {
+            const d = new Date(), h = String(d.getUTCHours() + 3).padStart(2,"0"), m = String(d.getMinutes()).padStart(2,"0"), s = String(d.getSeconds()).padStart(2,"0");
+            document.getElementById("timeDisplay").textContent = `moscow / ${h}:${m}:${s}`;
+        }
+        updateTime(); setInterval(updateTime, 1000);
+
+        let clicks = 0;
+        document.getElementById("avatarTrigger").addEventListener("click", () => {
+            clicks++; if(clicks >= 5) { clicks = 0; startGame(); }
+            setTimeout(() => { if(clicks > 0) clicks--; }, 3000);
+        });
+        function startGame() {
+            const overlay = document.getElementById("game-overlay"); overlay.style.display = "flex";
+            const area = document.getElementById("game-area"), scoreEl = document.getElementById("game-score");
+            let score = 0; scoreEl.textContent = score;
+            function spawn() {
+                if(score >= 10) { overlay.style.display = "none"; return; }
+                const cat = document.createElement("div"); cat.className = "game-cat"; cat.textContent = "🐱";
+                cat.style.left = Math.random() * 80 + 10 + "%"; cat.style.top = Math.random() * 80 + 10 + "%";
+                cat.onclick = () => { score++; scoreEl.textContent = score; area.removeChild(cat); spawn(); };
+                area.appendChild(cat);
+            }
+            spawn();
+        }
+
+        document.getElementById('viewCount').innerText = '76';
+    </script>
+</body>
+</html>
